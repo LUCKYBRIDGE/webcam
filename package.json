@@ -2,7 +2,7 @@
   "name": "knolcam",
   "version": "0.1.0",
   "private": true,
-  "description": "Offline classroom document camera",
+  "description": "Offline classroom document camera / 놀화상기",
   "main": "main.cjs",
   "scripts": {
     "start": "electron .",
@@ -25,7 +25,8 @@
       "target": [
         "portable"
       ],
-      "artifactName": "KnolCam-${version}-portable.${ext}"
+      "artifactName": "NolVisualizer-${version}-portable.${ext}"
     }
-  }
+  },
+  "productName": "놀화상기"
 }
