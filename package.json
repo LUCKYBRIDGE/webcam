@@ -25,7 +25,7 @@
       "target": [
         "portable"
       ],
-      "artifactName": "NolVisualizer-${version}-portable.${ext}"
+      "artifactName": "놀화상기.${ext}"
     }
   },
   "productName": "놀화상기"
