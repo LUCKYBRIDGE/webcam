@@ -1,6 +1,54 @@
 <!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>놀화상기</title><style>
 *{box-sizing:border-box}body{margin:0;background:#11151b;color:#f3f5f8;font:13px system-ui,sans-serif;overflow:hidden}header{height:35px;display:flex;align-items:center;justify-content:space-between;padding:0 12px;background:#1c222b}header span{color:#b3c1d2;font-size:11px}#stage{position:relative;height:calc(100vh - 75px);background:#080a0d;overflow:hidden;display:flex;align-items:center;justify-content:center}#video,#still{position:absolute;width:100%;height:100%;object-fit:contain;transform:translate(var(--x,0px),var(--y,0px)) scale(var(--z,1)) rotate(var(--r,0deg)) scaleX(var(--fx,1)) scaleY(var(--fy,1));filter:brightness(var(--b,1)) contrast(var(--c,1))}#ink{position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:crosshair}#hint{position:absolute;pointer-events:none;color:#9aa8b8}footer{height:40px;display:flex;align-items:center;justify-content:center;gap:5px;background:#1c222b}button,select,input{background:#303b4b;color:#f4f6f9;border:0;border-radius:5px;padding:6px;cursor:pointer}button:hover,button.active{background:#4776a5}button{white-space:nowrap}input[type=range]{width:85px;vertical-align:middle}#settings{position:absolute;right:8px;bottom:47px;background:#232b37;padding:12px;border-radius:9px;z-index:5;display:none;box-shadow:0 4px 20px #0009}#settings.open{display:grid;gap:9px}#settings label{display:flex;justify-content:space-between;gap:10px;align-items:center}#tools{position:absolute;left:8px;bottom:47px;background:#232b37;padding:9px;border-radius:9px;display:none;z-index:5}#tools.open{display:flex;gap:6px;align-items:center}#status{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:65vw}body.hidebar footer{opacity:0;pointer-events:none}body.hidebar:hover footer{opacity:1;pointer-events:auto}body.hidebar #stage{height:calc(100vh - 35px)}@media(max-width:700px){footer{justify-content:flex-start;overflow-x:auto}#stage{height:calc(100vh - 75px)}} 
-</style></head><body><header><strong>📷 놀화상기</strong><span id="status">카메라를 연결해 주세요</span></header><div id="stage"><video id="video" autoplay muted playsinline></video><canvas id="still" hidden></canvas><canvas id="ink"></canvas><div id="hint">카메라 시작을 누르세요</div></div><footer><button id="start">▶ 카메라</button><button id="minus">−</button><span id="zoomText">100%</span><button id="plus">＋</button><button id="zero" title="중심과 배율 초기화">◎ 영점</button><button id="shot">▣ 캡처</button><button id="pen">✎ 필기</button><button id="save">⇩ 저장</button><button id="live">↻ 실시간</button><button id="toolsBtn">도구</button><button id="settingsBtn">⚙</button><button id="full">⛶</button></footer>
+header{gap:8px}
+header strong{white-space:nowrap}
+#status{min-width:0;margin-inline-start:auto}
+#service-shortcuts{flex:none}
+#shortcuts-toggle{display:flex;align-items:center;gap:5px;padding:3px 7px;font:inherit;font-weight:600}
+#shortcuts-toggle::after{content:"";width:5px;height:5px;border:solid currentColor;border-width:0 1px 1px 0;transform:translateY(-1px) rotate(45deg)}
+#shortcuts-toggle[aria-expanded="true"]::after{transform:translateY(2px) rotate(225deg)}
+#shortcuts-panel{position:absolute;z-index:6;inset:39px 8px auto auto;width:min(296px,calc(100% - 16px));padding:10px;border:1px solid #424e60;border-radius:10px;background:#232b37;box-shadow:0 5px 18px #0009}
+.shortcut-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px;align-items:start}
+.shortcut-item{display:grid;justify-items:center;align-content:start;gap:4px;min-width:0;padding:4px 0 2px;border:0;border-radius:6px;background:none;color:#f3f5f8;font:inherit;text-align:center;text-decoration:none}
+.shortcut-item:is(:hover,:focus-visible){background:#364457}
+.shortcut-item:focus-visible,#shortcuts-toggle:focus-visible{outline:2px solid #a3d5ff;outline-offset:1px}
+.shortcut-item img{display:block;width:36px;height:36px;object-fit:contain}
+.shortcut-label{font-size:10px;line-height:14px;white-space:nowrap}
+@media(hover:hover) and (pointer:fine){
+  .shortcut-label{opacity:0}
+  .shortcut-item:is(:hover,:focus-visible) .shortcut-label{opacity:1}
+}
+#shortcut-notice{margin:6px 0 0;padding:6px 8px;border-radius:5px;background:#303b4b;color:#f3f5f8;text-align:center}
+#shortcut-notice:empty{margin:0;padding:0}
+</style></head><body>
+<header>
+  <strong>📷 놀화상기</strong>
+  <span id="status">카메라를 연결해 주세요</span>
+  <div id="service-shortcuts">
+    <button id="shortcuts-toggle" type="button" aria-expanded="false" aria-controls="shortcuts-panel">바로가기</button>
+    <nav id="shortcuts-panel" aria-label="놀 서비스 바로가기" hidden>
+      <div class="shortcut-grid">
+        <a class="shortcut-item" href="https://knolquiz.com/" target="_blank" rel="noopener noreferrer">
+          <img src="./assets/shortcuts/knolquiz-mark.svg" alt=""><span class="shortcut-label">놀퀴즈</span>
+        </a>
+        <button class="shortcut-item" id="story-shortcut" type="button">
+          <img src="./assets/shortcuts/knolstory-mark.svg" alt=""><span class="shortcut-label">놀스토리</span>
+        </button>
+        <a class="shortcut-item" href="https://art.knolquiz.com/" target="_blank" rel="noopener noreferrer">
+          <img src="./assets/shortcuts/knolart-mark.svg" alt=""><span class="shortcut-label">놀아트</span>
+        </a>
+        <a class="shortcut-item" href="https://print.knolquiz.com/" target="_blank" rel="noopener noreferrer">
+          <img src="./assets/shortcuts/nolprint-mark-pink.png" alt=""><span class="shortcut-label">놀프린트</span>
+        </a>
+        <a class="shortcut-item" href="https://name.knolquiz.com/" target="_blank" rel="noopener noreferrer">
+          <img src="./assets/shortcuts/nolsaju-mark.svg" alt=""><span class="shortcut-label">놀사주</span>
+        </a>
+      </div>
+      <p id="shortcut-notice" role="status"></p>
+    </nav>
+  </div>
+</header>
+<div id="stage"><video id="video" autoplay muted playsinline></video><canvas id="still" hidden></canvas><canvas id="ink"></canvas><div id="hint">카메라 시작을 누르세요</div></div><footer><button id="start">▶ 카메라</button><button id="minus">−</button><span id="zoomText">100%</span><button id="plus">＋</button><button id="zero" title="중심과 배율 초기화">◎ 영점</button><button id="shot">▣ 캡처</button><button id="pen">✎ 필기</button><button id="save">⇩ 저장</button><button id="live">↻ 실시간</button><button id="toolsBtn">도구</button><button id="settingsBtn">⚙</button><button id="full">⛶</button></footer>
 <div id="tools"><button id="move">✋ 이동</button><button id="eraser">지우개</button><button id="clear">전체 지우기</button><input id="color" type="color" value="#ff4141" aria-label="펜 색"><input id="size" type="range" min="1" max="30" value="4" aria-label="펜 굵기"></div>
 <div id="settings"><label>카메라 <select id="devices"><option value="">자동 선택</option></select></label><label>해상도 <select id="quality"><option value="auto" selected>자동 (2K 우선)</option><option value="1280">720p</option><option value="1920">1080p (1920×1080)</option><option value="2560">2K/QHD (2560×1440)</option><option value="3840">4K</option></select></label><label>밝기 <input id="brightness" type="range" min=".5" max="2" step=".05" value="1"></label><label>대비 <input id="contrast" type="range" min=".5" max="2" step=".05" value="1"></label><div><button id="rotate">↻ 90°</button><button id="flip">⇆ 반전</button><button id="pause">Ⅱ 정지</button><button id="hide">메뉴 숨김</button></div></div>
 <script src="./app.js"></script></body></html>

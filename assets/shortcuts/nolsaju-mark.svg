@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
+  <rect x="4" y="4" width="92" height="92" rx="26" fill="#F9C69D" stroke="#182632" stroke-width="3.5"/>
+  <g stroke="#182632" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Four-point celestial star sparkles (knolstory motif) -->
+    <path d="M77 16Q79 23 85 25Q79 27 77 34Q75 27 69 25Q75 23 77 16Z" fill="#182632" stroke-width="2"/>
+    <path d="M87 37Q88 41 91 42Q88 43 87 47Q86 43 83 42Q86 41 87 37Z" fill="#182632" stroke-width="1.5"/>
+    <!-- Left accent ticks (knolquiz / knolart motif) -->
+    <path d="M18 39L13 36M23 30L21 24"/>
+    <!-- Knol family white mascot silhouette -->
+    <path d="M25 66C20 42 30 24 49 24C66 24 75 40 73 63L69 78H28Z" fill="white"/>
+    <!-- Traditional fortune/naming scroll card -->
+    <path d="M21 60Q50 56 79 60L76 92Q50 89 24 92Z" fill="#FFFDF8"/>
+    <!-- Taegeuk harmony medallion inside scroll -->
+    <circle cx="42" cy="75" r="9.5" fill="#2563EB" stroke-width="2.6"/>
+    <path d="M32.5 75A9.5 9.5 0 0 1 51.5 75A4.75 4.75 0 0 1 42 75A4.75 4.75 0 0 0 32.5 75Z" fill="#D94826" stroke="none"/>
+    <circle cx="42" cy="75" r="9.5" stroke="#182632" stroke-width="2.6"/>
+    <!-- Crimson traditional seal stamp (낙관) -->
+    <rect x="57" y="68" width="13" height="13" rx="2.5" fill="#D94826" stroke-width="2.4"/>
+    <path d="M60.5 72.5H66.5M63.5 70.5V78" stroke="white" stroke-width="2"/>
+    <!-- Mascot cute round hands gripping scroll -->
+    <circle cx="21" cy="77" r="7.5" fill="white"/>
+    <circle cx="79" cy="77" r="7.5" fill="white"/>
+  </g>
+  <!-- Signature Knol mascot oval eyes & gentle smile -->
+  <ellipse cx="42.5" cy="42.5" rx="3.4" ry="4.3" fill="#182632"/>
+  <ellipse cx="56.5" cy="42.5" rx="3.4" ry="4.3" fill="#182632"/>
+  <path d="M46.5 51Q49.5 54 52.5 51" stroke="#182632" stroke-width="2.6" stroke-linecap="round"/>
+</svg>

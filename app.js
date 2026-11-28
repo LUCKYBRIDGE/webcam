@@ -19,3 +19,29 @@ function setMode(m){mode=m;for(const id of ['move','pen','eraser'])$(id).classLi
 function point(e){const r=ink.getBoundingClientRect();return{x:(e.clientX-r.left)*ink.width/r.width,y:(e.clientY-r.top)*ink.height/r.height}}
 let origin=null;ink.addEventListener('pointerdown',e=>{drawing=true;ink.setPointerCapture(e.pointerId);prev=point(e);origin={x:e.clientX,y:e.clientY,px:panX,py:panY}});ink.addEventListener('pointermove',e=>{if(!drawing)return;if(mode==='move'){panX=origin.px+e.clientX-origin.x;panY=origin.py+e.clientY-origin.y;update();return}const p=point(e);ctx.beginPath();ctx.moveTo(prev.x,prev.y);ctx.lineTo(p.x,p.y);ctx.lineWidth=+$('size').value*devicePixelRatio*(mode==='eraser'?5:1);ctx.lineCap='round';ctx.strokeStyle=$('color').value;ctx.globalCompositeOperation=mode==='eraser'?'destination-out':'source-over';ctx.stroke();ctx.globalCompositeOperation='source-over';prev=p});for(const evt of ['pointerup','pointercancel','lostpointercapture'])ink.addEventListener(evt,()=>drawing=false);
 $('start').onclick=start;$('devices').onchange=()=>{manualDeviceChange=true;preferredDevice='';reconnectAttempts=0;start()};$('quality').onchange=()=>{if(stream)start()};$('plus').onclick=()=>{zoom=Math.min(6,zoom+.25);update()};$('minus').onclick=()=>{zoom=Math.max(1,zoom-.25);update()};$('zero').onclick=()=>{zoom=1;panX=panY=0;update()};$('shot').onclick=shot;$('save').onclick=save;$('live').onclick=live;$('pen').onclick=()=>setMode('pen');$('move').onclick=()=>setMode('move');$('eraser').onclick=()=>setMode('eraser');$('clear').onclick=()=>ctx.clearRect(0,0,ink.width,ink.height);$('toolsBtn').onclick=()=>$('tools').classList.toggle('open');$('settingsBtn').onclick=()=>$('settings').classList.toggle('open');$('rotate').onclick=()=>{rot=(rot+90)%360;update()};$('flip').onclick=()=>{flip*=-1;update()};$('brightness').oninput=$('contrast').oninput=update;$('full').onclick=()=>document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen();$('hide').onclick=()=>{document.body.classList.toggle('hidebar');$('settings').classList.remove('open')};$('pause').onclick=()=>{if(!stream||captured)return;if(!paused){pausedFrame=document.createElement('canvas');pausedFrame.width=video.videoWidth;pausedFrame.height=video.videoHeight;pausedFrame.getContext('2d').drawImage(video,0,0);video.pause();paused=true}else{video.play();paused=false;pausedFrame=null}status(paused?'화면 일시정지':'실시간 화면')};document.addEventListener('keydown',e=>{if(e.target.matches('input,select'))return;if(e.key==='Escape'){$('settings').classList.remove('open');$('tools').classList.remove('open');document.body.classList.remove('hidebar')}if(e.key.toLowerCase()==='s')save()});video.addEventListener('error',()=>{if(!captured)status('영상 재생 오류 · 카메라 재연결을 시도하세요')});navigator.mediaDevices?.addEventListener('devicechange',async()=>{await enumerate();if(!stream&&!starting){reconnectAttempts=0;scheduleReconnect()}});enumerate();update();
+
+const shortcuts = $('service-shortcuts');
+const shortcutsToggle = $('shortcuts-toggle');
+const shortcutsPanel = $('shortcuts-panel');
+const shortcutNotice = $('shortcut-notice');
+
+function setShortcutsOpen(open) {
+  shortcutsPanel.hidden = !open;
+  shortcutsToggle.setAttribute('aria-expanded', String(open));
+  if (!open) shortcutNotice.textContent = '';
+}
+
+shortcutsToggle.addEventListener('click', () => setShortcutsOpen(shortcutsPanel.hidden));
+$('story-shortcut').addEventListener('click', () => {
+  shortcutNotice.textContent = '놀스토리는 추후 서비스 예정입니다.';
+});
+document.addEventListener('pointerdown', event => {
+  if (shortcutsPanel.hidden || shortcuts.contains(event.target)) return;
+  if (shortcutsPanel.contains(document.activeElement)) shortcutsToggle.focus();
+  setShortcutsOpen(false);
+});
+document.addEventListener('keydown', event => {
+  if (event.key !== 'Escape' || shortcutsPanel.hidden) return;
+  shortcutsToggle.focus();
+  setShortcutsOpen(false);
+});

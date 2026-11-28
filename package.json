@@ -17,6 +17,7 @@
     "productName": "KnolCam",
     "files": [
       "index.html",
+      "assets/shortcuts/*",
       "app.js",
       "main.cjs",
       "package.json"
