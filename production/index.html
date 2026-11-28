@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="description" content="USB 실물화상기와 웹캠을 연결해 수업 자료를 비추고, 캡처한 화면에 필기하는 교실 도구">
+  <meta name="theme-color" content="#131c22">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="놀화상기 · 교실 실물화상기">
+  <meta property="og:description" content="실물화상기와 웹캠으로 수업 자료를 비추고, 캡처한 화면에 필기해 보세요.">
+  <meta property="og:image" content="https://webcam.knolquiz.com/assets/knolcam-icon.png">
+  <title>놀화상기 · 교실 실물화상기</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="./assets/favicon.png">
+  <link rel="apple-touch-icon" href="./assets/knolcam-icon.png">
+  <link rel="stylesheet" href="./workspace-20261128/style.css">
+  <script src="./board.js" defer></script>
+  <script src="./workspace-20261128/workspace-ui.js" defer></script>
+  <script src="./workspace-20261128/app.js" defer></script>
+  <script src="./timer.js" defer></script>
+</head>
+<body data-scene="camera" data-view="empty" data-toolbar="open">
+  <header class="topbar">
+    <h1 class="brand"><img src="./assets/knolcam-ui.webp" width="30" height="30" alt="">놀화상기</h1>
+    <span id="boardLabel" hidden></span>
+    <div class="topbar-actions">
+      <button id="start" type="button">카메라 시작</button>
+      <button id="mirrorBtn" type="button" aria-haspopup="dialog" aria-label="미러링 방법" hidden>미러링</button>
+      <div id="serviceLinks">
+        <button id="servicesBtn" type="button" aria-controls="servicesPanel" aria-expanded="false">바로가기</button>
+        <nav id="servicesPanel" aria-label="놀 서비스 바로가기" hidden>
+          <div class="service-grid">
+            <a href="https://knolquiz.com/" target="_blank" rel="noopener noreferrer"><img src="./workspace-20261128/knolquiz-mark.svg" width="32" height="32" alt=""><span>놀퀴즈</span></a>
+            <button id="storyLink" type="button"><img src="./workspace-20261128/knolstory-mark.svg" width="32" height="32" alt=""><span>놀스토리</span></button>
+            <a href="https://art.knolquiz.com/" target="_blank" rel="noopener noreferrer"><img src="./workspace-20261128/knolart-mark.svg" width="32" height="32" alt=""><span>놀아트</span></a>
+            <a href="https://print.knolquiz.com/" target="_blank" rel="noopener noreferrer"><img src="./workspace-20261128/nolprint-mark-pink.png" width="32" height="32" alt=""><span>놀프린트</span></a>
+            <a href="https://name.knolquiz.com/" target="_blank" rel="noopener noreferrer"><img src="./workspace-20261128/nolsaju-mark.svg" width="32" height="32" alt=""><span>놀사주</span></a>
+          </div>
+          <p id="storyNotice" role="status"></p>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <main id="stage" tabindex="-1" aria-label="수업 화면">
+    <video id="video" autoplay muted playsinline></video>
+    <canvas id="pausedView" width="1" height="1" hidden></canvas>
+    <canvas id="still" width="1" height="1" hidden></canvas>
+    <div id="boardSurface" aria-hidden="true">
+      <canvas id="chalkInk" width="1" height="1" hidden></canvas>
+      <canvas id="whiteInk" width="1" height="1" hidden></canvas>
+      <canvas id="boardText" width="1" height="1" hidden></canvas>
+    </div>
+    <canvas id="ink" width="1" height="1"></canvas>
+    <canvas id="stroke" width="1" height="1" aria-hidden="true"></canvas>
+    <span id="boardPlaceHint">텍스트를 놓거나 수정할 위치를 누르세요</span>
+    <div id="hint">
+      <img src="./assets/knolcam-ui.webp" width="64" height="64" alt="">
+      <h2>카메라를 켜 주세요</h2>
+      <p>카메라 영상은 이 기기에서만 처리됩니다.</p>
+      <button id="startCenter" type="button" class="primary" aria-describedby="status">카메라 시작</button>
+    </div>
+    <p id="status" role="status"></p>
+  </main>
+
+  <div class="controls">
+    <div id="tools" class="popover" aria-labelledby="penPanelTitle" role="group" hidden>
+      <header class="panel-heading"><h2 id="penPanelTitle">필기 설정</h2><button type="button" data-close-panel="tools" aria-label="필기 설정 닫기">×</button></header>
+      <label for="color">펜 색</label><input id="color" type="color" value="#ff4141">
+      <label for="size">굵기</label><input id="size" type="range" min="2" max="18" value="5">
+      <button id="clear" type="button" title="필기만 모두 지우기">필기 지우기</button>
+    </div>
+    <div id="settings" class="popover" aria-labelledby="cameraPanelTitle" role="group" hidden>
+      <header class="panel-heading"><h2 id="cameraPanelTitle">카메라 및 화면 설정</h2><button type="button" data-close-panel="settings" aria-label="카메라 설정 닫기">×</button></header>
+      <label for="devices">카메라
+        <select id="devices"><option value="">자동 선택</option></select>
+      </label>
+      <label for="quality">해상도
+        <select id="quality">
+          <option value="auto" selected>자동 (2K 우선)</option>
+          <option value="1280">HD 720p</option>
+          <option value="1920">Full HD 1080p</option>
+          <option value="2560">2K/QHD 1440p</option>
+          <option value="3840">4K</option>
+        </select>
+      </label>
+      <label for="brightness">밝기 <input id="brightness" type="range" min=".5" max="2" step=".05" value="1"></label>
+      <label for="contrast">대비 <input id="contrast" type="range" min=".5" max="2" step=".05" value="1"></label>
+      <label for="zoomSlider">확대 배율 <input id="zoomSlider" type="range" min="100" max="600" step="1" value="100"></label>
+      <div class="control-group">
+        <button id="fit" type="button" aria-pressed="false" title="영상으로 화면 채우기 (G)">화면 채우기</button>
+        <button id="rotate" type="button">90° 회전</button>
+        <button id="flipY" type="button" data-stage-focus aria-pressed="false" aria-keyshortcuts="Y" title="상하 반전 (Y)">상하 반전</button>
+        <button id="flip" type="button" data-stage-focus aria-pressed="false" aria-keyshortcuts="X" title="좌우 반전 (X)">좌우 반전</button>
+      </div>
+    </div>
+
+    <footer aria-label="수업 도구">
+      <div id="toolbar" class="toolbar">
+        <div class="control-group scene-group" role="group" aria-label="수업 화면 선택">
+          <button id="sceneCamera" type="button" data-stage-focus aria-pressed="true" aria-keyshortcuts="1" title="카메라 화면 (1)">카메라</button>
+          <button id="sceneChalk" type="button" data-stage-focus aria-pressed="false" aria-keyshortcuts="2" title="칠판 (2)">칠판</button>
+          <button id="sceneWhite" type="button" data-stage-focus aria-pressed="false" aria-keyshortcuts="3" title="화이트보드 (3)">화이트보드</button>
+        </div>
+        <div id="cameraTools" class="control-group" role="group" aria-label="카메라 보기">
+          <button id="pause" class="primary" type="button" data-stage-focus aria-keyshortcuts="Space" title="일시정지 또는 재생 (Space)">일시정지</button>
+          <button id="shot" type="button" data-stage-focus aria-keyshortcuts="C" title="현재 화면 캡처 (C)">캡처</button>
+          <div class="control-group zoom-tools" role="group" aria-label="카메라 확대 및 축소">
+            <button id="minus" type="button" data-stage-focus aria-label="축소" title="축소 (−)" disabled>−</button>
+            <output id="zoomText" aria-label="현재 확대 배율">100%</output>
+            <button id="plus" type="button" data-stage-focus aria-label="확대" title="확대 (+)">＋</button>
+            <button id="zero" type="button" data-stage-focus title="화면 중심과 배율 초기화 (0)">영점</button>
+          </div>
+        </div>
+        <div class="control-group ink-group" role="group" aria-label="필기 모드">
+          <button id="move" type="button" data-stage-focus aria-pressed="true" aria-keyshortcuts="M" title="필기를 끄고 화면 이동 (M)">이동</button>
+          <button id="pen" type="button" data-stage-focus aria-pressed="false" aria-keyshortcuts="P" title="펜으로 필기 (P)">펜</button>
+          <button id="marker" type="button" data-stage-focus aria-pressed="false" aria-keyshortcuts="H" title="형광펜으로 표시 (H)">형광펜</button>
+          <button id="textBtn" type="button" data-stage-focus aria-haspopup="dialog" aria-keyshortcuts="N" title="텍스트 넣기 (N)" hidden>텍스트</button>
+          <button id="toolsBtn" type="button" aria-controls="tools" aria-expanded="false" title="펜 색·굵기·필기 지우기">필기 설정</button>
+          <button id="save" type="button" data-stage-focus aria-keyshortcuts="S" title="현재 화면을 PNG로 저장 (S)">저장</button>
+        </div>
+      </div>
+      <div class="control-group utility">
+        <button id="settingsBtn" type="button" aria-controls="settings" aria-expanded="false" title="카메라와 화면 설정">설정</button>
+        <button id="timerBtn" type="button" aria-controls="timerPanel" aria-expanded="false" aria-keyshortcuts="R" title="수업 타이머 (R)"><span id="timerButtonText">타이머</span></button>
+        <a class="download-link" data-app-download href="https://webcam.knolquiz.com/downloads/knolcam-windows-x64.exe" aria-label="Windows x64 앱 받기" title="Windows x64 무설치 앱 받기">앱 받기</a>
+        <button id="helpBtn" type="button" aria-haspopup="dialog" title="버튼과 단축키 설명서 (?)">설명서</button>
+        <button id="full" type="button" aria-pressed="false" aria-label="전체화면" aria-keyshortcuts="F" title="전체화면 (F)">전체화면</button>
+        <button id="toolbarBtn" type="button" aria-controls="toolbar" aria-expanded="true" aria-keyshortcuts="T" title="도구 접기 또는 펴기 (T)">도구 접기</button>
+      </div>
+    </footer>
+  </div>
+
+  <p id="saveNotice" role="status"></p>
+  <div id="timerAnnouncement" class="sr-only" role="status" aria-atomic="true"></div>
+
+  <section id="timerPanel" class="timer-panel" aria-labelledby="timerTitle" hidden>
+    <header class="timer-header">
+      <h2 id="timerTitle">수업 타이머</h2>
+      <button id="timerClose" type="button" title="타이머 창 접기">접기</button>
+    </header>
+    <div id="timerDisplay" role="timer">05:00</div>
+    <p id="timerMessage" role="status"></p>
+    <div class="timer-actions">
+      <div class="control-group" role="group" aria-label="타이머 시간 선택">
+        <button type="button" data-minutes="1">1분</button>
+        <button type="button" data-minutes="3">3분</button>
+        <button type="button" data-minutes="5">5분</button>
+        <button type="button" data-minutes="10">10분</button>
+      </div>
+      <label for="timerMinutes">직접 설정 <input id="timerMinutes" aria-describedby="timerMessage" type="number" min="1" max="180" step="1" value="5" inputmode="numeric"> 분</label>
+      <div class="control-group">
+        <button id="timerToggle" class="primary" type="button">시작</button>
+        <button id="timerReset" type="button">초기화</button>
+      </div>
+    </div>
+  </section>
+
+  <dialog id="mirrorDialog" aria-labelledby="mirrorTitle">
+    <form class="text-form" method="dialog">
+      <header class="panel-heading"><h2 id="mirrorTitle">미러링 방법</h2><button type="submit" aria-label="미러링 방법 닫기">×</button></header>
+      <p>휴대폰과 교실 화면을 같은 Wi-Fi에 연결하세요.</p>
+      <p id="mirrorIos" hidden><strong>iPhone · iPad</strong><br>제어 센터 → 화면 미러링 → 기기 선택</p>
+      <p id="mirrorAndroid" hidden><strong>갤럭시</strong><br>빠른 설정 → Smart View → 기기 선택<br><strong>Google Cast 호환 화면</strong><br>Google Home → 기기 선택 → 화면 전송</p>
+    </form>
+  </dialog>
+
+  <dialog id="boardTextDialog" aria-labelledby="boardTextTitle">
+    <form id="boardTextForm" class="text-form">
+      <h2 id="boardTextTitle">판서 텍스트</h2>
+      <div id="boardTextSelectField" hidden>
+        <label for="boardTextSelect">글상자 선택</label>
+        <select id="boardTextSelect"></select>
+      </div>
+      <label for="boardTextInput">화면에 표시할 내용</label>
+      <textarea id="boardTextInput" maxlength="1000" rows="5" autofocus></textarea>
+      <div class="control-group">
+        <button class="primary" type="submit">넣기</button>
+        <button id="boardTextDelete" type="button" hidden>지우기</button>
+        <button id="boardTextCancel" type="button">취소</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="clearDialog" aria-labelledby="clearTitle" aria-describedby="clearMessage">
+    <form method="dialog" class="text-form">
+      <h2 id="clearTitle">모두 지울까요?</h2>
+      <p id="clearMessage"></p>
+      <div class="control-group">
+        <button value="cancel" autofocus>취소</button>
+        <button value="clear">모두 지우기</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="help" aria-labelledby="helpTitle">
+    <header class="guide-header">
+      <div class="guide-title">
+        <h2 id="helpTitle">놀화상기 사용 설명서</h2>
+        <form method="dialog"><button autofocus>닫기</button></form>
+      </div>
+      <nav class="guide-nav" aria-label="설명서 목차">
+        <button type="button" data-help-topic="helpStart">빠른 시작</button>
+        <button type="button" data-help-topic="helpCamera">카메라</button>
+        <button type="button" data-help-topic="helpBoard">판서</button>
+        <button type="button" data-help-topic="helpTimer">타이머</button>
+        <button type="button" data-help-topic="helpKeys">단축키</button>
+        <button type="button" data-app-download data-help-topic="helpDownload">앱 다운로드</button>
+      </nav>
+    </header>
+    <div class="guide-body">
+      <section aria-labelledby="helpStart">
+        <h3 id="helpStart" tabindex="-1">빠른 시작</h3>
+        <ol>
+          <li><strong>자료 보여 주기</strong> · PC에서는 USB 실물화상기·웹캠·내장 카메라를 사용할 수 있습니다. 휴대폰에서는 가운데 <strong>카메라 시작</strong>을 누릅니다. 브라우저가 권한을 물으면 <strong>허용</strong>을 누릅니다.</li>
+          <li><strong>원하는 영상 고르기</strong> · <strong>설정 → 카메라</strong>에서 장치를 고릅니다. 영상 방향을 바꾸려면 설정의 <strong>좌우 반전</strong> 또는 <strong>상하 반전</strong>을 누릅니다.</li>
+          <li><strong>모니터에 크게 띄우기</strong> · <strong>전체화면</strong>을 누르고, 필요하면 <strong>도구 접기</strong>로 도구 모음을 줄입니다. 다시 보려면 <strong>도구 펴기</strong>를 누릅니다.</li>
+          <li><strong>카메라 없이 시작하기</strong> · <strong>칠판</strong> 또는 <strong>화이트보드</strong>를 누르면 바로 필기할 수 있습니다.</li>
+        </ol>
+      </section>
+
+      <section aria-labelledby="helpCamera">
+        <h3 id="helpCamera" tabindex="-1">카메라 · 캡처 · 저장</h3>
+        <dl class="guide-actions">
+          <dt>일시정지 · 재생</dt><dd>일시정지하면 지금 장면이 화면에 남습니다. 재생하면 실시간 영상으로 돌아오고 화면 위 필기가 이어집니다.</dd>
+          <dt>캡처 · 저장</dt><dd>캡처하면 한 장으로 고정되고 펜을 바로 쓸 수 있습니다. 캡처에 새로 표시한 내용은 <strong>재생 전에 저장</strong>하세요. 저장을 누르면 현재 화면과 필기를 PNG로 내려받습니다.</dd>
+          <dt>좌우 · 상하 반전</dt><dd>거울처럼 좌우를 뒤집거나 위아래를 뒤집습니다. 두 방향은 각각 켜고 끌 수 있습니다.</dd>
+          <dt>확대 · 축소</dt><dd>화면 아래의 <strong>＋</strong>와 <strong>−</strong>로 100~600% 사이에서 조절합니다. 영상 위에서 마우스 휠을 돌리면 포인터가 가리키는 부분을 중심으로 확대됩니다. <strong>설정 → 확대 배율</strong>에서 세밀하게 조절할 수 있습니다.</dd>
+          <dt>이동 · 영점</dt><dd><strong>이동</strong> 모드에서 확대된 영상을 드래그해 원하는 부분을 보여 줍니다. <strong>영점</strong>은 100%와 화면 중앙으로 되돌립니다.</dd>
+          <dt>화면 채우기 · 회전</dt><dd>설정에서 화면 전체를 채우면 영상 가장자리가 일부 잘릴 수 있습니다. <strong>영상 전체 보기</strong>로 돌아올 수 있습니다. 90° 회전은 옆으로 놓인 자료의 방향을 돌립니다.</dd>
+          <dt>해상도 · 밝기 · 대비</dt><dd>자동은 2K를 먼저 시도합니다. 실제 해상도는 영상 아래 상태에 표시됩니다. 영상이 끊기면 HD 720p로 낮추고, 자료가 어두우면 밝기와 대비를 조절합니다.</dd>
+        </dl>
+        <h4>화면이 나오지 않거나 수업 중 끊겼을 때</h4>
+        <ol>
+          <li><strong>권한이 차단됐을 때</strong> · 브라우저 주소창의 사이트 설정에서 카메라를 허용한 뒤 <strong>카메라 시작</strong>을 누릅니다. Windows라면 <strong>설정 → 개인 정보 및 보안 → 카메라</strong>에서 카메라와 데스크톱 앱의 접근도 확인합니다.</li>
+          <li><strong>카메라가 목록에 없을 때</strong> · 기기의 전원과 USB 영상 모드를 확인하고 허브 대신 PC에 직접 연결합니다. Windows <strong>카메라</strong> 앱에서 영상이 잡히는지 확인한 뒤 그 앱과 화상회의 앱을 닫습니다.</li>
+          <li><strong>수업 중 USB가 빠졌을 때</strong> · 연결이 복구되면 재생할 수 있습니다. 일시정지나 캡처 중이었다면 기존 화면과 필기를 먼저 저장할 수 있습니다. 자동 연결을 멈추려면 <strong>연결 취소</strong>를 누릅니다.</li>
+        </ol>
+      </section>
+
+      <section aria-labelledby="helpBoard">
+        <h3 id="helpBoard" tabindex="-1">칠판 · 화이트보드 · 텍스트</h3>
+        <dl class="guide-actions">
+          <dt>칠판 · 화이트보드</dt><dd>화면을 오가도 두 보드의 작업은 각각 남습니다. 새로고침하거나 창을 닫기 전에 <strong>저장</strong>으로 PNG를 남깁니다.</dd>
+          <dt>펜 · 형광펜</dt><dd>펜으로 쓰고, 형광펜으로 글자가 비치게 표시합니다. 필기 설정에서 펜 색과 굵기를 바꿀 수 있습니다.</dd>
+          <dt>텍스트 넣기</dt><dd><strong>텍스트</strong>를 누르고 글을 놓을 위치를 클릭한 뒤 내용을 씁니다. 키보드에서는 <kbd>N</kbd>으로 입력 창을 바로 열 수 있습니다.</dd>
+          <dt>텍스트 고치기</dt><dd>텍스트 도구를 켜고 기존 글자를 클릭하거나, 입력 창의 <strong>글상자 선택</strong>에서 기존 글을 골라 수정·삭제합니다.</dd>
+          <dt>필기·텍스트 지우기</dt><dd>필기 설정에서 현재 보드의 내용을 지울 수 있습니다. 확인 창에서 취소하면 그대로 남습니다.</dd>
+        </dl>
+      </section>
+
+      <section aria-labelledby="helpTimer">
+        <h3 id="helpTimer" tabindex="-1">수업 타이머</h3>
+        <ol>
+          <li><strong>타이머</strong>를 누르고 1·3·5·10분을 고르거나 1~180분을 직접 입력한 뒤 <strong>시작</strong>합니다.</li>
+          <li><strong>접기</strong>를 눌러도 시간이 계속 줄어듭니다. 도구 모음에서 남은 시간이나 종료를 확인합니다. 소리는 나지 않습니다.</li>
+          <li><strong>일시정지</strong>와 <strong>계속</strong>으로 이어서 재고, <strong>초기화</strong>로 정해 둔 시간으로 돌아갑니다.</li>
+        </ol>
+      </section>
+
+      <section data-app-download aria-labelledby="helpDownload">
+        <h3 id="helpDownload" tabindex="-1">Windows 앱 다운로드</h3>
+        <ol>
+          <li><a class="download-link" href="https://webcam.knolquiz.com/downloads/knolcam-windows-x64.exe">Windows x64 앱 받기</a>를 누릅니다. PC에서는 하단의 <strong>앱 받기</strong>로도 받을 수 있습니다.</li>
+          <li>브라우저의 다운로드 목록이나 <strong>다운로드</strong> 폴더에서 <strong>놀캠.exe</strong>를 찾아 실행합니다. 설치 과정 없이 열립니다.</li>
+          <li>카메라를 꽂고 놀캠을 열면 자동 연결을 시도합니다. 여러 장치가 있으면 <strong>설정 → 카메라</strong>에서 고릅니다. 파일을 받은 뒤에는 인터넷 없이도 쓸 수 있습니다.</li>
+        </ol>
+        <p class="guide-note">Windows x64용 무서명 파일입니다. 학교 PC 정책이나 Windows 보안 경고로 실행이 제한되면 웹에서 놀캠을 계속 사용할 수 있습니다.</p>
+      </section>
+
+      <section aria-labelledby="helpKeys">
+        <h3 id="helpKeys" tabindex="-1">단축키 한눈에 보기</h3>
+        <p class="guide-note">놀캠 탭이나 앱에 포커스가 있을 때 작동합니다. 텍스트 입력 중에는 글을 먼저 입력할 수 있도록 화면 단축키가 멈춥니다.</p>
+        <dl class="guide-actions">
+          <dt><kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd></dt><dd>카메라 · 칠판 · 화이트보드</dd>
+          <dt><kbd>Space</kbd> <kbd>C</kbd> <kbd>S</kbd></dt><dd>일시정지·재생 · 캡처 · PNG 저장</dd>
+          <dt><kbd>X</kbd> <kbd>Y</kbd></dt><dd>좌우 반전 · 상하 반전</dd>
+          <dt><kbd>P</kbd> <kbd>H</kbd> <kbd>M</kbd> <kbd>N</kbd></dt><dd>펜 · 형광펜 · 이동 · 판서 텍스트</dd>
+          <dt><kbd>F</kbd> <kbd>T</kbd> <kbd>G</kbd></dt><dd>전체화면 · 도구 접기/펴기 · 화면 채우기/전체 보기</dd>
+          <dt><kbd>+</kbd> <kbd>−</kbd> <kbd>0</kbd></dt><dd>확대 · 축소 · 영점</dd>
+          <dt><kbd>R</kbd> <kbd>?</kbd> <kbd>Esc</kbd></dt><dd>타이머 · 설명서 · 현재 창 닫기 또는 전체화면 나가기</dd>
+        </dl>
+      </section>
+    </div>
+  </dialog>
+</body>
+</html>

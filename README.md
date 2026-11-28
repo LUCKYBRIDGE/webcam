@@ -2,6 +2,8 @@
 
 교실용 USB 실물화상기 및 웹캠 프로그램입니다. 카메라 영상은 외부 서버로 전송하지 않습니다.
 
+[놀화상기 공식 웹](https://webcam.knolquiz.com/)은 `production/`의 화면을 사용합니다. `node production/build-worker.mjs`로 화면을 제공하는 Worker 모듈을 출력할 수 있습니다.
+
 ## Windows 무설치 EXE
 GitHub **Actions → Windows portable EXE → 최신 실행 → Artifacts**에서 ZIP을 내려받아 압축을 풀고 EXE를 실행합니다. 첫 빌드는 GitHub Actions에서 인터넷을 사용하지만, 완성된 프로그램은 인터넷 없이 실행됩니다.
 
