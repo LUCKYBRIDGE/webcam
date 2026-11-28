@@ -86,6 +86,18 @@ const isAndroid = /Android/.test(navigator.userAgent);
 const isMobile = isIos || isAndroid || Boolean(navigator.userAgentData?.mobile);
 document.body.toggleAttribute('data-mobile', isMobile);
 const deviceSelect = $('devices');
+const desktopDeviceSelect = $('desktopDevices');
+const desktopPicker = $('desktopCameraPicker');
+const cameraCount = $('cameraCount');
+const deviceSelectors = [deviceSelect, desktopDeviceSelect].filter(Boolean);
+if (!isMobile && desktopPicker) {
+  document.body.setAttribute('data-desktop-camera', '');
+  desktopPicker.hidden = false;
+  $('desktopCameraTitle').hidden = false;
+  $('desktopCameraHint').hidden = false;
+  $('mobileCameraTitle').hidden = true;
+  centerCameraButton.hidden = true;
+}
 const qualitySelect = $('quality');
 const devicePreferenceKey = 'knolcam.camera-device.v1';
 const unsupportedCamera =
@@ -109,8 +121,13 @@ function readCameraPreference() {
   }
 }
 
-function rememberCamera() {
-  selectedCamera = deviceSelect.value;
+function selectCamera(value) {
+  selectedCamera = value;
+  for (const select of deviceSelectors) select.value = value;
+}
+
+function rememberCamera(value) {
+  selectCamera(value);
   try {
     if (selectedCamera) localStorage.setItem(devicePreferenceKey, selectedCamera);
     else localStorage.removeItem(devicePreferenceKey);
@@ -125,13 +142,24 @@ function updateCameraButton() {
   cameraButton.textContent = centerCameraButton.textContent = label;
   cameraButton.toggleAttribute('data-requested', cameraRequested);
   cameraButton.disabled = centerCameraButton.disabled = starting && !cameraRequested;
-  deviceSelect.disabled = starting;
+  for (const select of deviceSelectors) select.disabled = starting;
+  updateDesktopAutoOption();
   qualitySelect.disabled = starting;
   cameraButton.classList.toggle('active', connected);
 }
 
+function updateDesktopAutoOption() {
+  const option = desktopDeviceSelect?.options[0];
+  if (!option?.dataset.defaultLabel) return;
+  const track = stream?.getVideoTracks()[0];
+  option.textContent = track?.label ? '자동 · ' + track.label : option.dataset.defaultLabel;
+}
+
 async function enumerate() {
-  if (!mediaDevices?.enumerateDevices) return null;
+  if (!mediaDevices?.enumerateDevices) {
+    if (cameraCount) cameraCount.textContent = '카메라 목록을 볼 수 없음';
+    return null;
+  }
   const request = ++deviceListRequest;
   try {
     const devices = (await mediaDevices.enumerateDevices()).filter(
@@ -144,14 +172,25 @@ async function enumerate() {
         (device, index) =>
           new Option(device.label || '카메라 ' + (index + 1), device.deviceId),
       );
+    const count = options.length;
     if (selectedCamera && !options.some(({ value }) => value === selectedCamera)) {
       options.push(new Option('선택한 카메라 (연결 대기)', selectedCamera));
     }
     deviceSelect.replaceChildren(new Option(isMobile ? '자동 · 후면 우선' : '자동 선택', ''), ...options);
     deviceSelect.value = selectedCamera;
+    if (desktopPicker && !isMobile) {
+      const autoOption = new Option('자동 선택', '');
+      autoOption.dataset.defaultLabel = devices.length && !count ? '자동 선택 · 권한 필요' : '자동 선택';
+      desktopDeviceSelect.replaceChildren(autoOption, ...options.map(option => option.cloneNode(true)));
+      desktopDeviceSelect.value = selectedCamera;
+      updateDesktopAutoOption();
+      cameraCount.textContent = count ? '기기 ' + count + '대'
+        : devices.length ? '권한 허용 후 확인' : '표시할 기기 없음';
+    }
     return devices;
   } catch {
     // Camera acquisition remains available even when a browser hides the device list.
+    if (request === deviceListRequest && cameraCount) cameraCount.textContent = '카메라 목록을 볼 수 없음';
     return null;
   }
 }
@@ -270,8 +309,7 @@ async function requestSavedOrDefault(selected, attempt) {
   } catch (error) {
     if (!isCurrentAttempt(attempt) || !selected || !isUnavailableCamera(error)) throw error;
     // Keep the saved USB choice for the next launch when it may be connected again.
-    selectedCamera = '';
-    deviceSelect.value = '';
+    selectCamera('');
     status('저장한 카메라가 없습니다 · 기본 카메라 연결 중…');
     return requestCamera('', attempt);
   }
@@ -652,10 +690,13 @@ function reconnectWithSettings() {
   return connectCamera({ retrying: true });
 }
 
-deviceSelect.onchange = () => {
-  rememberCamera();
-  return reconnectWithSettings();
-};
+for (const select of deviceSelectors) {
+  select.onchange = () => {
+    rememberCamera(select.value);
+    if (!cameraRequested && select === desktopDeviceSelect) return beginCamera();
+    return reconnectWithSettings();
+  };
+}
 qualitySelect.onchange = reconnectWithSettings;
 workspaceUi?.bindZoom(() => zoom, () => !board?.ink && !drawing && hasFrame(), (scale, x, y) => {
   const ratio = scale / zoom;

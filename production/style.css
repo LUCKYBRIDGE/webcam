@@ -411,3 +411,23 @@ body[data-scene="camera"][data-view="empty"] :is(#cameraTools, .ink-group) { dis
 @media (max-width: 360px) {
   .utility #full { max-width: 85px; overflow: hidden; text-overflow: ellipsis; }
 }
+
+.camera-picker {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 7px;
+  padding-inline-start: 14px;
+  border-inline-start: 1px solid var(--border);
+}
+.camera-picker label { font-weight: 650; white-space: nowrap; }
+#desktopDevices { width: clamp(160px, 28vw, 340px); min-width: 0; }
+#cameraCount { color: var(--muted); font-size: 12px; white-space: nowrap; }
+body[data-scene]:not([data-scene="camera"]) #desktopCameraPicker,
+body[data-toolbar="closed"]:not([data-view="empty"]) #desktopCameraPicker { display: none; }
+@media (max-width: 660px) {
+  body[data-desktop-camera] .topbar { flex-wrap: wrap; }
+  body[data-desktop-camera] .topbar #start:not([data-requested]) { display: inline-block; }
+  .camera-picker { order: 1; flex-basis: 100%; padding-inline-start: 0; border-inline-start: none; }
+  #desktopDevices { flex: 1; }
+}

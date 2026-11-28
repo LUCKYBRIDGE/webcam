@@ -12,16 +12,23 @@
   <title>놀화상기 · 교실 실물화상기</title>
   <link rel="icon" type="image/png" sizes="32x32" href="./assets/favicon.png">
   <link rel="apple-touch-icon" href="./assets/knolcam-icon.png">
-  <link rel="stylesheet" href="./workspace-20261128/style.css">
+  <link rel="stylesheet" href="./workspace-20261128/style.css?v=desktop-cameras">
   <script src="./board.js" defer></script>
   <script src="./workspace-20261128/workspace-ui.js" defer></script>
-  <script src="./workspace-20261128/app.js" defer></script>
+  <script src="./workspace-20261128/app.js?v=desktop-cameras" defer></script>
   <script src="./timer.js" defer></script>
 </head>
 <body data-scene="camera" data-view="empty" data-toolbar="open">
   <header class="topbar">
     <h1 class="brand"><img src="./assets/knolcam-ui.webp" width="30" height="30" alt="">놀화상기</h1>
     <span id="boardLabel" hidden></span>
+    <div id="desktopCameraPicker" class="camera-picker" hidden>
+      <label for="desktopDevices">카메라</label>
+      <select id="desktopDevices" aria-describedby="cameraCount">
+        <option value="">기기 확인 중…</option>
+      </select>
+      <span id="cameraCount" role="status">기기 확인 중</span>
+    </div>
     <div class="topbar-actions">
       <button id="start" type="button">카메라 시작</button>
       <button id="mirrorBtn" type="button" aria-haspopup="dialog" aria-label="미러링 방법" hidden>미러링</button>
@@ -55,7 +62,9 @@
     <span id="boardPlaceHint">텍스트를 놓거나 수정할 위치를 누르세요</span>
     <div id="hint">
       <img src="./assets/knolcam-ui.webp" width="64" height="64" alt="">
-      <h2>카메라를 켜 주세요</h2>
+      <h2 id="mobileCameraTitle">카메라를 켜 주세요</h2>
+      <h2 id="desktopCameraTitle" hidden>카메라 미리보기</h2>
+      <p id="desktopCameraHint" hidden>상단에서 노트북 내장 카메라나 연결한 실물화상기를 선택하세요.</p>
       <p>카메라 영상은 이 기기에서만 처리됩니다.</p>
       <button id="startCenter" type="button" class="primary" aria-describedby="status">카메라 시작</button>
     </div>
@@ -212,8 +221,8 @@
       <section aria-labelledby="helpStart">
         <h3 id="helpStart" tabindex="-1">빠른 시작</h3>
         <ol>
-          <li><strong>자료 보여 주기</strong> · PC에서는 USB 실물화상기·웹캠·내장 카메라를 사용할 수 있습니다. 휴대폰에서는 가운데 <strong>카메라 시작</strong>을 누릅니다. 브라우저가 권한을 물으면 <strong>허용</strong>을 누릅니다.</li>
-          <li><strong>원하는 영상 고르기</strong> · <strong>설정 → 카메라</strong>에서 장치를 고릅니다. 영상 방향을 바꾸려면 설정의 <strong>좌우 반전</strong> 또는 <strong>상하 반전</strong>을 누릅니다.</li>
+          <li><strong>자료 보여 주기</strong> · PC에서는 상단 카메라 목록에서 내장 카메라·웹캠·USB 실물화상기를 선택할 수 있습니다. 휴대폰에서는 가운데 <strong>카메라 시작</strong>을 누릅니다. 브라우저가 권한을 물으면 <strong>허용</strong>을 누릅니다.</li>
+          <li><strong>원하는 영상 고르기</strong> · PC에서는 상단 목록, 휴대폰에서는 <strong>설정 → 카메라</strong>에서 장치를 고릅니다. 영상 방향을 바꾸려면 설정의 <strong>좌우 반전</strong> 또는 <strong>상하 반전</strong>을 누릅니다.</li>
           <li><strong>모니터에 크게 띄우기</strong> · <strong>전체화면</strong>을 누르고, 필요하면 <strong>도구 접기</strong>로 도구 모음을 줄입니다. 다시 보려면 <strong>도구 펴기</strong>를 누릅니다.</li>
           <li><strong>카메라 없이 시작하기</strong> · <strong>칠판</strong> 또는 <strong>화이트보드</strong>를 누르면 바로 필기할 수 있습니다.</li>
         </ol>
